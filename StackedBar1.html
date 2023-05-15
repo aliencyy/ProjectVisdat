@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Load d3.js -->
+    <script src="https://d3js.org/d3.v6.js"></script>
+    <title>Stacked Bar Chart</title>
+    <style>
+        #my_dataviz {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header sticky top-0 bg-white shadow-md px-8 py-2">
+        <!-- navigation -->
+        <nav class="nav font-semibold text-lg">
+            <ul class="flex justify-center space-x-8">
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer active">
+                    <a href="index.html">HOME</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer active">
+                    <a href="StackedBar1.html">Stacked Chart 1</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer active">
+                    <a href="StackedBar2.html">Stacked Chart 2</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer">
+                    <a href="PieChartASEAN.html">Pie Chart</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer">
+                    <a href="HighestGrowth.html">Bar Chart 1</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer">
+                    <a href="LowestGrowth.html">Bar Chart 2</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <h1 class="mt-6 font-bold text-center mb-10 text-xl">World Population From 1970-2022</h1>
+    <!-- Create a div where the graph will take place -->
+    <div id="my_dataviz"></div>
+
+    <script>
+
+        // set the dimensions and margins of the graph
+        const margin = { top: 100, right: 0, bottom: 20, left: 90 },
+            width = 800 - margin.left - margin.right,
+            height = 600 - margin.top - margin.bottom;
+
+        // append the svg object to the body of the page
+        const svg = d3.select("#my_dataviz")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Parse the Data
+        d3.csv("https://raw.githubusercontent.com/aliencyy/ProjectVisdat/main/data1.csv").then(function (data) {
+
+            // List of subgroups = header of the csv files = soil condition here
+            const subgroups = data.columns.slice(1)
+
+            // List of groups = species here = value of the first column called group -> I show them on the X axis
+            const groups = data.map(d => d.group)
+
+            // Add X axis
+            const x = d3.scaleBand()
+                .domain(groups)
+                .range([0, width])
+                .padding([0.2])
+            svg.append("g")
+                .attr("transform", `translate(0, ${height})`)
+                .call(d3.axisBottom(x).tickSizeOuter(0));
+
+            // Add Y axis
+            const y = d3.scaleLinear()
+                .domain([0, 4800000000])
+                .range([height, 0]);
+            svg.append("g")
+                .call(d3.axisLeft(y));
+
+            // color palette = one color per subgroup
+            const color = d3.scaleOrdinal()
+                .domain(subgroups)
+                .range(d3.schemeSet2);
+
+            //stack the data? --> stack per subgroup
+            const stackedData = d3.stack()
+                .keys(subgroups)
+                (data)
+
+
+            // ----------------
+            // Highlight a specific subgroup when hovered
+            // ----------------
+
+            // Show the bars
+            svg.append("g")
+                .selectAll("g")
+                // Enter in the stack data = loop key per key = group per group
+                .data(stackedData)
+                .join("g")
+                .attr("fill", d => color(d.key))
+                .attr("class", d => "myRect " + d.key) // Add a class to each subgroup: their name
+                .selectAll("rect")
+                // enter a second time = loop subgroup per subgroup to add all rectangles
+                .data(d => d)
+                .join("rect")
+                .attr("x", d => x(d.data.group))
+                .attr("y", d => y(d[1]))
+                .attr("height", d => y(d[0]) - y(d[1]))
+                .attr("width", x.bandwidth())
+                .attr("stroke", "grey")
+                .on("mouseover", function (event, d) { // What happens when user hover a bar
+
+                    // what subgroup are we hovering?
+                    const subGroupName = d3.select(this.parentNode).datum().key
+
+                    // Reduce opacity of all rect to 0.2
+                    d3.selectAll(".myRect").style("opacity", 0.2)
+
+                    // Highlight all rects of this subgroup with opacity 1. It is possible to select them since they have a specific class = their name.
+                    d3.selectAll("." + subGroupName).style("opacity", 1)
+                })
+                .on("mouseleave", function (event, d) { // When user do not hover anymore
+
+                    // Back to normal opacity: 1
+                    d3.selectAll(".myRect")
+                        .style("opacity", 1)
+                })
+
+            // Add legend
+            const legend = svg.append("g")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", 12)
+                .attr("text-anchor", "end")
+                .selectAll("g")
+                .data(subgroups.slice().reverse())
+                .join("g")
+                .attr("transform", (d, i) => `translate(0,${i * 20})`);
+
+            legend.append("rect")
+                .attr("x", width - 19)
+                .attr("width", 19)
+                .attr("height", 19)
+                .attr("fill", color);
+
+            legend.append("text")
+                .attr("x", width - 24)
+                .attr("y", 9.5)
+                .attr("dy", "0.32em")
+                .text(d => d)
+                .style("fill", "black");
+
+
+
+        })
+
+    </script>
+</body>
+
+</html>
