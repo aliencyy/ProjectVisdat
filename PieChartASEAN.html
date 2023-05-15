@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Pie Chart</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #tooltip {
+            position: absolute;
+            text-align: center;
+            width: 80px;
+            height: auto;
+            padding: 6px 12px;
+            background: #ddd;
+            color: #000;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+
+        svg {
+            display: block;
+            margin: auto;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .legend-title {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header sticky top-0 bg-white shadow-md px-8 py-2">
+        <!-- navigation -->
+        <nav class="nav font-semibold text-lg">
+            <ul class="flex justify-center space-x-8">
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer active">
+                    <a href="index.html">HOME</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer active">
+                    <a href="StackedBar1.html">Stacked Chart 1</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer active">
+                    <a href="StackedBar2.html">Stacked Chart 2</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer">
+                    <a href="PieChartASEAN.html">Pie Chart</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer">
+                    <a href="HighestGrowth.html">Bar Chart 1</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer">
+                    <a href="LowestGrowth.html">Bar Chart 2</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <h1 class="mt-6 font-bold text-center mb-10 text-xl">ASEAN Countries Population Percentage in 2022</h1>
+
+    <svg width="600" height="400"></svg>
+    <!--Step 2-->
+    <script>
+        // Step 3
+        var svg = d3.select("svg"),
+            width = svg.attr("width"),
+            height = svg.attr("height"),
+            radius = Math.min(width, height) / 2 - 40;
+
+        // Step 1
+        var data = [
+            { name: "Singapore 1%", share: 1 },
+            { name: "Brunei 0%", share: 0 },
+            { name: "Indonesia 41%", share: 41 },
+            { name: "Philippines 17%", share: 17 },
+            { name: "Vietnam 14%", share: 14 },
+            { name: "Thailand 11%", share: 11 },
+            { name: "Myanmar 8%", share: 8 },
+            { name: "Malaysia 5%", share: 5 },
+            { name: "Cambodia 2%", share: 2 },
+            { name: "Laos 1%", share: 1 },
+        ];
+
+        var g = svg
+            .append("g")
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+        // Step 4
+        var ordScale = d3
+            .scaleOrdinal()
+            .domain(data)
+            .range([
+                "#4e79a7",
+                "#f28e2b",
+                "#e15759",
+                "#76b7b2",
+                "#59a14f",
+                "#edc948",
+                "#ed9e6e",
+                "#8c6d31",
+                "#b07aa1",
+                "#ff9da7",
+            ]);
+
+        // Step 5
+        var pie = d3.pie().value(function (d) {
+            return d.share;
+        });
+
+        var arc = g.selectAll("arc").data(pie(data)).enter();
+
+        // Step 6
+        var path = d3.arc().outerRadius(radius).innerRadius(0);
+
+        arc
+            .append("path")
+            .attr("d", path)
+            .attr("fill", function (d) {
+                return ordScale(d.data.name);
+            })
+            .on("mouseover", function (d) {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr(
+                        "d",
+                        d3
+                            .arc()
+                            .outerRadius(radius + 10)
+                            .innerRadius(0)
+                    );
+
+                var percentage = d.data.share + "%";
+                tooltip.transition().duration(200).style("opacity", 0.9);
+                tooltip
+                    .html(d.data.name + ": " + percentage)
+                    .style("left", d3.event.pageX + "px")
+                    .style("top", d3.event.pageY + "px");
+            })
+            .on("mouseout", function (d) {
+                d3.select(this).transition().duration(200).attr("d", path);
+                tooltip.transition().duration(200).style("opacity", 0);
+            });
+
+        // Step 7
+        var label = d3.arc().outerRadius(radius).innerRadius(0);
+
+        // Step 8
+        function midAngle(d) {
+            return d.startAngle + (d.endAngle - d.startAngle) / 2;
+        }
+
+        // Step 9
+        var legend = svg
+            .selectAll(".legend")
+            .data(data)
+            .enter()
+            .append("g")
+            .attr("class", "legend")
+            .attr("transform", function (d, i) {
+                return "translate(" + (width - 80) + "," + (i * 20 + 20) + ")";
+            });
+
+        // Step 10
+        legend
+            .append("rect")
+            .attr("width", 15)
+            .attr("height", 18)
+            .style("fill", function (d) {
+                return ordScale(d.name);
+            });
+
+        // Step 11
+        legend
+            .append("text")
+            .attr("x", 20)
+            .attr("y", 9)
+            .attr("dy", ".35em")
+            .text(function (d) {
+                return d.name;
+            })
+            .style("font-family", "helvetica")
+            .style("font-size", 8);
+
+        // Add legend title
+        svg
+            .append("text")
+            .attr("class", "legend-title")
+            .attr("x", width - 80)
+            .attr("y", 10)
+            .attr("text-anchor", "end")
+            .text("Keterangan:");
+    </script>
+</body>
+
+</html>
