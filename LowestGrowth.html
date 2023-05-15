@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Lowest Growth</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+    <header class="header sticky top-0 bg-white shadow-md px-8 py-2">
+        <!-- navigation -->
+        <nav class="nav font-semibold text-lg">
+            <ul class="flex justify-center space-x-8">
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer active">
+                    <a href="index.html">HOME</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer active">
+                    <a href="StackedBar1.html">Stacked Chart 1</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer active">
+                    <a href="StackedBar2.html">Stacked Chart 2</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer">
+                    <a href="PieChartASEAN.html">Pie Chart</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer">
+                    <a href="HighestGrowth.html">Bar Chart 1</a>
+                </li>
+                <li
+                    class="p-2 border-b-2 border-blue-500 border-opacity-0 hover:border-opacity-100 hover:text-blue-500 duration-200 cursor-pointer">
+                    <a href="LowestGrowth.html">Bar Chart 2</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <h1 class="mt-6 font-bold text-center mb-10 text-xl">Top 5 Countries With Lowest Growth</h1>
+    <!-- 
+    <div class="buttons flex justify-start ml-10">
+        <a href="../home.html"><button type="button"
+                class="focus:outline-none text-black bg-blue-200 hover:bg-blue-500 hover:text-white focus:ring-4 focus:ring-blue-300 font-medium text-xs px-5 py-1.5 mb-10 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-900 ">Home</button></a>
+        <a href="#"><button type="button"
+                class="focus:outline-none text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium text-xs px-5 py-1.5 mb-10 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-900 ">2021</button></a>
+        <a href="2022.html"><button type="button"
+                class="focus:outline-none text-black bg-blue-200 hover:bg-blue-500 hover:text-white focus:ring-4 focus:ring-blue-300 font-medium text-xs px-5 py-1.5 mb-10 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-900 ">2022</button></a>
+
+    </div> -->
+
+    <div class="flex justify-center">
+        <svg width="800" height="400" class="mx-auto"></svg>
+    </div>
+
+    <script>
+        // Data
+        var data = [
+            { label: "Lithuania", value: 0.9869 },
+            { label: "Bulgaria", value: 0.9849 },
+            { label: "American Samoa", value: 0.9831 },
+            { label: "Lebanon", value: 0.9816 },
+            { label: "Ukraine", value: 0.9129 },
+        ];
+
+        // SVG element
+        var svg = d3.select("svg");
+
+        // Set the dimensions and margins of the graph
+        var margin = { top: 20, right: 50, bottom: 50, left: 60 },
+            width = +svg.attr("width") - margin.left - margin.right,
+            height = +svg.attr("height") - margin.top - margin.bottom;
+
+        // Set the color scale with different hue values
+        var color = d3.scaleOrdinal().range(["#D4ADFC"]);
+
+        // Set the ranges
+        var x = d3.scaleBand().range([0, width]).padding(0.4);
+        var y = d3.scaleLinear().range([height, 0]);
+
+        // Append a group element to the SVG element
+        var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // Scale the range of the data in the domains
+        x.domain(
+            data.map(function (d) {
+                return d.label;
+            })
+        );
+        y.domain([
+            0.9,
+            1,
+        ]);
+
+        // Add the bars with color based on value
+        g.selectAll(".bar")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", function (d) {
+                return x(d.label);
+            })
+            .attr("y", function (d) {
+                return y(d.value);
+            })
+            .attr("width", x.bandwidth())
+            .attr("height", function (d) {
+                return height - y(d.value);
+            })
+            .attr("fill", function (d) {
+                return color(d.label);
+            })
+            .on("mouseover", function (d) { // add mouseover event
+                d3.select(this).attr("fill", "#5C469C"); // change color on mouseover
+            })
+            .on("mouseout", function (d) { // add mouseout event
+                d3.select(this).attr("fill", color(d.label)); // change color back on mouseout
+            });
+
+
+        // Add the x axis
+        g.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        // Add the y axis
+        g.append("g")
+            .call(d3.axisLeft(y).ticks(10));
+
+        // Add value label to each bar
+        g.selectAll(".text")
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("class", "text")
+            .attr("text-anchor", "middle")
+            .attr("x", function (d) { return x(d.label) + x.bandwidth() / 2; })
+            .attr("y", function (d) { return y(d.value) - 5; })
+            .text(function (d) { return d.value; })
+            .style("font-size", "10px")
+            .style("font-weight", "bold")
+            .style("font-family", "Arial");
+    </script>
+
+    <div class="ml-6">
+
+    </div>
+</body>
+
+</html>
